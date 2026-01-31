@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Usina Cultural</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+        rel="stylesheet" />
+    <!-- HTML2PDF Library for Portfolio Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                    },
+                    colors: {
+                        // Primary Colors
+                        'primary-purple': '#6366F1',
+                        'primary-purple-dark': '#4F46E5',
+                        'primary-purple-light': '#818CF8',
+
+                        // Accent Colors
+                        'accent-orange': '#F97316',
+                        'accent-orange-dark': '#EA580C',
+                        'accent-blue': '#3B82F6',
+                        'accent-teal': '#14B8A6',
+                        'accent-yellow': '#FBBF24',
+
+                        // Background Colors
+                        'bg-primary': '#0F172A',
+                        'bg-secondary': '#1E293B',
+                        'bg-tertiary': '#334155',
+
+                        // Text Colors
+                        'text-primary': '#F8FAFC',
+                        'text-secondary': '#94A3B8',
+                        'text-muted': '#64748B',
+
+                        // Status Colors
+                        'status-success': '#10B981',
+                        'status-warning': '#F59E0B',
+                        'status-error': '#EF4444',
+
+                        // Legacy (for compatibility)
+                        primary: "#F97316",
+                        "primary-hover": "#EA580C"
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0F172A;
+            color: #F8FAFC;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* A4 Aspect Ratio Helper */
+        .aspect-a4 {
+            aspect-ratio: 210/297;
+        }
+
+        .print-canvas {
+            background-color: white;
+            color: black;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Print Styles for Document Preview */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printable-area,
+            #printable-area * {
+                visibility: visible;
+            }
+
+            #printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background: white;
+                color: black;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            /* Reset Backgrounds for Print */
+            body {
+                background-color: white;
+            }
+        }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
