@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { ViewState } from '../types';
+import { ViewState, DigitalEdict } from '../types';
+import { supabase } from '../supabaseClient';
 
 interface Props {
     onBack: () => void;
@@ -13,6 +13,42 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
     const [status, setStatus] = useState<AnalysisStatus>('IDLE');
     const [progress, setProgress] = useState(0);
     const [dragActive, setDragActive] = useState(false);
+    const [currentEdict, setCurrentEdict] = useState<DigitalEdict | null>(null);
+    const [paymentStatus, setPaymentStatus] = useState<'APPROVED' | 'PENDING' | 'NONE'>('NONE');
+
+    // Fetch latest edict for demo purposes
+    useEffect(() => {
+        const fetchLatestEdict = async () => {
+            const { data } = await supabase.from('edicts').select('*').order('created_at', { ascending: false }).limit(1).single();
+            if (data) {
+                setCurrentEdict({
+                    id: data.id,
+                    title: data.title,
+                    category: data.sphere || 'Cultura',
+                    uploadDate: new Date(data.upload_date).toLocaleDateString('pt-BR'),
+                    status: data.status,
+                    extractedText: data.extracted_text,
+                    keywords: data.keywords || [],
+                    fileName: data.title + '.pdf',
+                    structuredData: data.structured_data
+                });
+            }
+        };
+
+        const checkPayment = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase.from('payments').select('status').eq('user_email', user.email).single();
+                if (data) setPaymentStatus(data.status);
+            } else {
+                // Mock for demo if no auth
+                setPaymentStatus('APPROVED');
+            }
+        };
+
+        fetchLatestEdict();
+        checkPayment();
+    }, []);
 
     // Simulação do Processamento da IA
     useEffect(() => {
@@ -24,7 +60,6 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
                         setStatus('COMPLETE');
                         return 100;
                     }
-                    // Incremento variável para parecer processamento real
                     return prev + Math.floor(Math.random() * 15);
                 });
             }, 500);
@@ -38,22 +73,15 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
     };
 
     const handleDrag = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === 'dragenter' || e.type === 'dragover') {
-            setDragActive(true);
-        } else if (e.type === 'dragleave') {
-            setDragActive(false);
-        }
+        e.preventDefault(); e.stopPropagation();
+        if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+        else if (e.type === 'dragleave') setDragActive(false);
     };
 
     const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFileSelect();
-        }
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileSelect();
     };
 
     return (
@@ -64,22 +92,23 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
                     <span className="material-symbols-outlined text-white">arrow_back_ios_new</span>
                 </button>
                 <h2 className="flex-1 text-center font-bold text-lg">Analisador de Editais</h2>
-                
-                {/* Dashboard Button */}
-                <button 
-                    onClick={() => onNavigate(ViewState.DASHBOARD)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
-                    title="Ir para Dashboard"
+
+                {/* Hotmart Status Badge */}
+                <div
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${paymentStatus === 'APPROVED' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                        }`}
+                    title={paymentStatus === 'APPROVED' ? 'Acesso Premium Liberado via Hotmart' : 'Pagamento Pendente'}
                 >
-                    <span className="material-symbols-outlined">dashboard</span>
-                </button>
+                    <span className="material-symbols-outlined text-sm">{paymentStatus === 'APPROVED' ? 'verified' : 'lock'}</span>
+                    {paymentStatus === 'APPROVED' ? 'Premium Ativo' : 'Acesso Limitado'}
+                </div>
             </div>
 
             <main className="flex-1 max-w-2xl mx-auto w-full p-4 md:p-6 space-y-6">
-                
-                {/* 1. Área de Upload (Visível apenas se IDLE ou durante processamento inicial) */}
+
+                {/* 1. Área de Upload */}
                 {status === 'IDLE' && (
-                    <div 
+                    <div
                         className={`border-2 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center transition-all duration-300 h-80 ${dragActive ? 'border-blue-500 bg-blue-500/10 scale-[1.02]' : 'border-white/10 bg-[#1c1c1e]'}`}
                         onDragEnter={handleDrag}
                         onDragLeave={handleDrag}
@@ -93,7 +122,7 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
                         <p className="text-sm text-white/50 mb-8 max-w-xs">
                             Arraste ou selecione o arquivo do edital cultural para análise da Usina IA
                         </p>
-                        <button 
+                        <button
                             onClick={handleFileSelect}
                             className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95"
                         >
@@ -102,7 +131,7 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
                     </div>
                 )}
 
-                {/* 2. Card de Processamento (Visível durante e após) */}
+                {/* 2. Processamento */}
                 {(status === 'PROCESSING' || status === 'COMPLETE') && (
                     <div className="bg-[#1c1c1e] border border-white/5 rounded-2xl p-6 shadow-xl animate-fade-in">
                         <div className="flex justify-between items-center mb-4">
@@ -125,81 +154,72 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
                             </span>
                             <span className="text-sm font-bold text-blue-400">{progress}%</span>
                         </div>
-                        
+
                         <div className="h-2 w-full bg-[#121212] rounded-full overflow-hidden">
-                            <div 
+                            <div
                                 className="h-full bg-blue-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                                 style={{ width: `${progress}%` }}
                             ></div>
                         </div>
-                        
-                        <p className="text-xs text-white/40 mt-3 italic">
-                            Extraindo prazos, orçamentos e documentos obrigatórios...
-                        </p>
                     </div>
                 )}
 
-                {/* 3. Resultados (Aparecem quando Completo ou Progresso > 50%) */}
-                {progress > 40 && (
+                {/* 3. Resultados Estruturados (Visão do Proponente) */}
+                {progress > 50 && (
                     <div className="space-y-6 animate-slide-up">
-                        
-                        <div className="flex items-center gap-2 text-white/80">
-                            <span className="material-symbols-outlined text-blue-500">analytics</span>
-                            <h3 className="font-bold text-lg">Insights da IA</h3>
-                        </div>
 
-                        {/* Grid de Cards */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <InsightCard 
-                                icon="calendar_month" 
-                                label="PRAZO FINAL" 
-                                value="24 Out 2024" 
-                                delay="0"
-                            />
-                            <InsightCard 
-                                icon="payments" 
-                                label="VALOR MÁXIMO" 
-                                value="R$ 50.000,00" 
-                                delay="100"
-                            />
-                            <InsightCard 
-                                icon="person_check" 
-                                label="ELEGIBILIDADE" 
-                                value="MEI / PF" 
-                                delay="200"
-                            />
-                            <InsightCard 
-                                icon="description" 
-                                label="DOCUMENTOS" 
-                                value="12 itens" 
-                                delay="300"
-                            />
-                        </div>
-
-                        {/* Alerta de Compatibilidade */}
-                        <div className="bg-[#1a1500] border border-orange-500/30 rounded-2xl p-5 relative overflow-hidden group">
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
-                            <div className="flex items-start gap-3 relative z-10">
-                                <span className="material-symbols-outlined text-orange-500 text-2xl mt-1">warning</span>
-                                <div>
-                                    <h4 className="font-bold text-orange-500 text-sm uppercase mb-1">Alertas de Compatibilidade</h4>
-                                    <p className="text-sm text-orange-100/80 leading-relaxed">
-                                        Este edital exige comprovação de atuação cultural de no mínimo <strong className="text-white">24 meses</strong>. 
-                                        Seu perfil atual na Usina possui 14 meses registrados. Você precisará de documentos extras para comprovação.
-                                    </p>
+                        {/* Timeline Alert (Only pertinent ones) */}
+                        {currentEdict?.structuredData?.timeline && (
+                            <div className="bg-[#1a1500] border border-orange-500/30 rounded-2xl p-5 relative overflow-hidden group">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
+                                <div className="flex items-start gap-4 relative z-10">
+                                    <span className="material-symbols-outlined text-orange-500 text-2xl mt-1">event_busy</span>
+                                    <div>
+                                        <h4 className="font-bold text-orange-500 text-sm uppercase mb-1">Atenção ao Cronograma</h4>
+                                        <p className="text-sm text-orange-100/80">
+                                            As inscrições encerram em <strong className="text-white">{new Date(currentEdict.structuredData.timeline.registrationEnd).toLocaleDateString()}</strong>.
+                                            Faltam apenas 15 dias!
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Resumo da IA */}
-                        <div className="bg-[#1c1c1e] border border-white/5 rounded-2xl p-5">
-                            <h4 className="font-bold text-white text-xs uppercase mb-4 tracking-wider">Resumo da IA</h4>
+                        {/* Checklist de Sucesso */}
+                        <div className="bg-[#1c1c1e] border border-white/5 rounded-2xl p-6">
+                            <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-4">
+                                <span className="material-symbols-outlined text-green-400">checklist</span>
+                                <h3 className="font-bold text-lg text-white">Checklist Documental</h3>
+                            </div>
+
                             <ul className="space-y-3">
-                                <SummaryItem text="Foco em artes visuais e performance urbana." />
-                                <SummaryItem text="Necessário contrapartida social em escolas públicas." />
-                                <SummaryItem text="Vedada a participação de servidores públicos." />
+                                {currentEdict?.structuredData?.eligibility.requiredDocs.map((doc, idx) => (
+                                    <li key={idx} className="flex items-start gap-3 text-sm text-slate-300 group hover:text-white transition-colors cursor-pointer">
+                                        <div className="w-5 h-5 rounded border border-white/20 flex items-center justify-center mt-0.5 group-hover:border-blue-500 transition-colors">
+                                            {/* Mock checkbox state */}
+                                        </div>
+                                        <span>{doc}</span>
+                                    </li>
+                                )) || (
+                                        <p className="text-white/50 text-sm italic">Nenhum documento listado. Aguarde o processamento.</p>
+                                    )}
                             </ul>
                         </div>
+
+                        {/* Financial Insight */}
+                        {currentEdict?.structuredData && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-[#1c1c1e] border border-white/5 p-4 rounded-xl">
+                                    <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Valor Total</p>
+                                    <p className="text-lg font-bold text-green-400">{currentEdict.structuredData.financial.totalValue}</p>
+                                </div>
+                                <div className="bg-[#1c1c1e] border border-white/5 p-4 rounded-xl">
+                                    <p className="text-[10px] font-bold text-white/40 uppercase mb-1">Máx. por Projeto</p>
+                                    <p className="text-lg font-bold text-white">{currentEdict.structuredData.financial.maxPerProject}</p>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 )}
             </main>
@@ -208,12 +228,12 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
             {status === 'COMPLETE' && (
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#101922]/90 backdrop-blur-md border-t border-white/10 z-40 animate-slide-up">
                     <div className="max-w-2xl mx-auto">
-                        <button 
+                        <button
                             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-xl shadow-blue-900/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-95"
                             onClick={onBack}
                         >
                             <span className="material-symbols-outlined">add_link</span>
-                            Vincular ao Projeto
+                            Vincular ao Meu Projeto
                         </button>
                     </div>
                 </div>
@@ -221,28 +241,5 @@ const EditalAnalyzer: React.FC<Props> = ({ onBack, onNavigate }) => {
         </div>
     );
 };
-
-// Subcomponentes
-const InsightCard: React.FC<{icon: string, label: string, value: string, delay: string}> = ({ icon, label, value, delay }) => (
-    <div 
-        className="bg-[#1c1c1e] border border-white/5 p-4 rounded-xl flex flex-col gap-3 hover:border-blue-500/30 transition-colors animate-fade-in"
-        style={{ animationDelay: `${delay}ms` }}
-    >
-        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <span className="material-symbols-outlined text-lg">{icon}</span>
-        </div>
-        <div>
-            <p className="text-[10px] font-bold text-white/40 uppercase mb-1">{label}</p>
-            <p className="text-lg font-bold text-white">{value}</p>
-        </div>
-    </div>
-);
-
-const SummaryItem: React.FC<{text: string}> = ({ text }) => (
-    <li className="flex items-start gap-3 text-sm text-slate-300">
-        <span className="material-symbols-outlined text-blue-500 text-lg mt-0.5">check_circle</span>
-        <span>{text}</span>
-    </li>
-);
 
 export default EditalAnalyzer;

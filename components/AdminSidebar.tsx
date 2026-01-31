@@ -67,6 +67,7 @@ const MENU_STRUCTURE: MenuSection[] = [
             { label: 'Termos e Legal', view: ViewState.ADMIN_LEGAL, icon: 'policy' },
             { label: 'SAC Settings', view: ViewState.ADMIN_SUPPORT_SETTINGS, icon: 'support_agent' },
             { label: 'SEO', view: ViewState.ADMIN_SEO, icon: 'public' },
+            { label: 'Notificações', view: ViewState.ADMIN_NOTIFICATIONS, icon: 'notifications_active' },
         ]
     },
     {
@@ -114,7 +115,7 @@ const AdminSidebar: React.FC<Props> = ({ currentView, onNavigate, mobileOpen, on
         <>
             {/* Mobile Backdrop */}
             {isMobile && mobileOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
                     onClick={onMobileClose}
                 />
@@ -129,31 +130,31 @@ const AdminSidebar: React.FC<Props> = ({ currentView, onNavigate, mobileOpen, on
                         </div>
                         <span className="font-display font-bold text-lg tracking-tight whitespace-nowrap">Admin Panel</span>
                     </div>
-                    
+
                     {isCollapsed && (
                         <div className="w-full flex justify-center">
-                             <div className="w-8 h-8 bg-[#DD6B20] rounded-lg flex items-center justify-center">
+                            <div className="w-8 h-8 bg-[#DD6B20] rounded-lg flex items-center justify-center">
                                 <span className="material-symbols-outlined text-white text-lg">admin_panel_settings</span>
                             </div>
                         </div>
                     )}
 
                     {!isMobile && !isCollapsed && (
-                        <button 
+                        <button
                             onClick={() => setIsCollapsed(!isCollapsed)}
                             className="text-white/50 hover:text-white transition-colors"
                         >
                             <span className="material-symbols-outlined">first_page</span>
                         </button>
                     )}
-                     {!isMobile && isCollapsed && (
-                        <button 
-                             onClick={() => setIsCollapsed(!isCollapsed)}
-                             className="absolute -right-3 top-6 bg-[#DD6B20] rounded-full p-1 shadow-lg text-white"
+                    {!isMobile && isCollapsed && (
+                        <button
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            className="absolute -right-3 top-6 bg-[#DD6B20] rounded-full p-1 shadow-lg text-white"
                         >
-                             <span className="material-symbols-outlined text-xs">last_page</span>
+                            <span className="material-symbols-outlined text-xs">last_page</span>
                         </button>
-                     )}
+                    )}
                 </div>
 
                 {/* Scrollable Content */}
@@ -168,7 +169,7 @@ const AdminSidebar: React.FC<Props> = ({ currentView, onNavigate, mobileOpen, on
                             {isCollapsed && (
                                 <div className="h-px w-8 mx-auto bg-white/10 mb-2"></div>
                             )}
-                            
+
                             <ul>
                                 {section.items.map((item) => {
                                     const isActive = currentView === item.view;
@@ -178,8 +179,8 @@ const AdminSidebar: React.FC<Props> = ({ currentView, onNavigate, mobileOpen, on
                                                 onClick={() => handleNavigation(item.view)}
                                                 className={`
                                                     w-full flex items-center gap-3 px-6 py-3 transition-all relative group
-                                                    ${isActive 
-                                                        ? 'bg-[#DD6B20] text-white border-l-4 border-white' 
+                                                    ${isActive
+                                                        ? 'bg-[#DD6B20] text-white border-l-4 border-white'
                                                         : 'text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
                                                     }
                                                 `}
@@ -188,7 +189,7 @@ const AdminSidebar: React.FC<Props> = ({ currentView, onNavigate, mobileOpen, on
                                                 <span className={`material-symbols-outlined ${isCollapsed ? 'text-2xl' : 'text-xl'}`}>
                                                     {item.icon}
                                                 </span>
-                                                
+
                                                 <span className={`text-sm font-medium transition-all ${isCollapsed ? 'hidden' : 'block'}`}>
                                                     {item.label}
                                                 </span>
@@ -221,7 +222,7 @@ const AdminSidebar: React.FC<Props> = ({ currentView, onNavigate, mobileOpen, on
 
                 {/* Footer (Profile/Logout) */}
                 <div className="absolute bottom-0 w-full p-4 bg-[#152C4E] border-t border-white/10">
-                    <button 
+                    <button
                         onClick={() => handleNavigation(ViewState.LANDING)}
                         className={`flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/5 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
                     >

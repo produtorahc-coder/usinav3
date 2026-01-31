@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { supabase } from '../supabaseClient';
 
 type Listener = (data: any) => void;
 
@@ -20,7 +21,26 @@ export const RealTimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     const listeners = useRef<Record<string, Listener[]>>({});
     const activeRooms = useRef<Set<string>>(new Set());
 
+    const settingsRef = useRef<any>({ enabled: true, frequency_limit: 999, start_time: '00:00', end_time: '23:59' });
+    const notificationsShown = useRef(0);
+
     useEffect(() => {
+        // Fetch initial settings
+        const fetchSettings = async () => {
+            const { data } = await supabase.from('app_settings').select('value').eq('key', 'notifications').single();
+            if (data) settingsRef.current = data.value;
+        };
+        fetchSettings();
+
+        // Subscribe to changes
+        const channel = supabase
+            .channel('app_settings_changes')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings', filter: "key=eq.notifications" }, (payload: any) => {
+                console.log('[WS] Configurações atualizadas:', payload.new.value);
+                settingsRef.current = payload.new.value;
+            })
+            .subscribe();
+
         // Simula conexão
         const timer = setTimeout(() => {
             setIsConnected(true);
@@ -29,9 +49,21 @@ export const RealTimeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         // Simula alertas de prazo vindos do servidor aleatoriamente
         const alertInterval = setInterval(() => {
+            // Check settings
+            if (!settingsRef.current.enabled) return;
+
+            // Check time
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            if (currentTime < settingsRef.current.start_time || currentTime > settingsRef.current.end_time) return;
+
+            // Check frequency limit
+            if (notificationsShown.current >= settingsRef.current.frequency_limit) return;
+
             // 20% de chance a cada 30s de receber um alerta
             if (Math.random() > 0.8) {
-                dispatch('alerta-prazo', { 
+                notificationsShown.current += 1;
+                dispatch('alerta-prazo', {
                     id: Date.now(),
                     title: '🚨 Prazo Crítico',
                     message: 'O Edital Lei Paulo Gustavo encerra em menos de 2 horas!',
@@ -43,6 +75,7 @@ export const RealTimeProvider: React.FC<{ children: ReactNode }> = ({ children }
         return () => {
             clearTimeout(timer);
             clearInterval(alertInterval);
+            supabase.removeChannel(channel);
         };
     }, []);
 
@@ -54,7 +87,7 @@ export const RealTimeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const emit = (event: string, data: any) => {
         console.log(`[WS] Emitting ${event}:`, data);
-        
+
         // Simula delay de rede e broadcast
         setTimeout(() => {
             if (event === 'completar-tarefa') {
@@ -81,10 +114,10 @@ export const RealTimeProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const joinRoom = (roomId: string) => {
         if (activeRooms.current.has(roomId)) return;
-        
+
         console.log(`[WS] Entrou na sala: ${roomId}`);
         activeRooms.current.add(roomId);
-        
+
         // Simula atividade de outros usuários na sala
         if (roomId.includes('mission')) {
             setTimeout(() => {

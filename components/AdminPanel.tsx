@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ViewState } from '../types';
 import AdminSidebar from './AdminSidebar';
+import AdminNotifications from './AdminNotifications';
 
 interface Props {
     currentView: ViewState;
@@ -139,8 +140,13 @@ const AdminPanel: React.FC<Props> = ({ currentView, onNavigate, userEmail }) => 
                         </div>
                     )}
 
+                    {/* Notifications Manager */}
+                    {currentView === ViewState.ADMIN_NOTIFICATIONS && (
+                        <AdminNotifications />
+                    )}
+
                     {/* Placeholder for other views */}
-                    {currentView !== ViewState.ADMIN_DASHBOARD && (
+                    {currentView !== ViewState.ADMIN_DASHBOARD && currentView !== ViewState.ADMIN_NOTIFICATIONS && (
                         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                             <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                                 <span className="material-symbols-outlined text-4xl text-gray-400">construction</span>

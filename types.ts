@@ -59,7 +59,10 @@ export enum ViewState {
     // 6. Tools
     ADMIN_BROADCAST = 'ADMIN_BROADCAST',
     ADMIN_BULK_UPLOAD = 'ADMIN_BULK_UPLOAD',
-    ADMIN_MAINTENANCE = 'ADMIN_MAINTENANCE'
+    ADMIN_MAINTENANCE = 'ADMIN_MAINTENANCE',
+
+    // 7. Notifications Control
+    ADMIN_NOTIFICATIONS = 'ADMIN_NOTIFICATIONS'
 }
 
 export interface PlanProps {
@@ -257,4 +260,24 @@ export interface DigitalEdict {
     keywords: string[]; // Indexação para busca
     publicUrl?: string; // Link gerado para usuários
     fileName: string;
+    structuredData?: {
+        timeline: {
+            registrationStart: string;
+            registrationEnd: string;
+            resultsDate: string;
+            executionPeriod: string;
+        };
+        financial: {
+            totalValue: string;
+            maxPerProject: string;
+        };
+        eligibility: {
+            participants: string;
+            requiredDocs: string[];
+        };
+        identification: {
+            organ: string;
+            sphere: 'Municipal' | 'Estadual' | 'Federal' | 'Privado';
+        }
+    };
 }

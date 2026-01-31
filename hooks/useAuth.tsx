@@ -124,7 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: 'https://usina.urbrasil.com'
             }
         });
 
@@ -165,7 +165,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Reset password
     const resetPassword = async (email: string) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`
+            redirectTo: `https://usina.urbrasil.com/reset-password`
         });
 
         if (error) throw error;
